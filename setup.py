@@ -34,7 +34,7 @@ setup(
     version=VERSION,
     description='Sani-NLU is a library to implement NLU component for Sani chatbot.',
     long_description=long_description,
-    url='https://gitlab.com/phamnam.mta/sani_nlu.git',
+    url='https://github.com/phamnam-mta/sani_nlu.git',
     packages=find_packages(),
     include_package_data=True,
     package_data={'': ['hyperparameters.ini'],
