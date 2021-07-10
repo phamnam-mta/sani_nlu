@@ -1,5 +1,6 @@
 import os
 import logging
+import torch
 from typing import Any, Dict, List, Optional, Text, Tuple, Type, Callable
 from sani_nlu.utils import initializeFolder, download_model
 
@@ -11,6 +12,9 @@ from rasa.shared.nlu.training_data.message import Message
 from flair.models import SequenceTagger
 from flair.data import Sentence
 
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+    
 logger = logging.getLogger(__name__)
 
 class FlairExtractor(EntityExtractor):

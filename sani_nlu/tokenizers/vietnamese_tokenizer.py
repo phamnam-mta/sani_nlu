@@ -85,7 +85,7 @@ class VietnameseTokenizer(Tokenizer):
 
         return self._apply_token_pattern(tokens)
 
-    def text_normalize(text):
+    def text_normalize(self, text):
         """
         Chuẩn hóa dấu tiếng Việt
         """

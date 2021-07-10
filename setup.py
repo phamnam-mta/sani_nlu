@@ -27,11 +27,11 @@ try:
 except:
     reqs = [str(ir.requirement) for ir in install_reqs]
 
-VERSION = os.getenv('PACKAGE_VERSION', 'v0.0.1')[1:]
+VERSION = os.getenv('PACKAGE_VERSION', 'v0.0.1')
 
 setup(
     name='sani_nlu',
-    version=VERSION,
+    version='v0.0.3',
     description='Sani-NLU is a library to implement NLU component for Sani chatbot.',
     long_description=long_description,
     url='https://github.com/phamnam-mta/sani_nlu.git',
@@ -44,7 +44,7 @@ setup(
     author_email='phamnam.mta@gmail.com',
     install_requires=reqs,
     keywords='sani_nlu',
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     py_modules=['sani_nlu'],
 
 )
