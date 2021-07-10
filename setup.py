@@ -42,9 +42,6 @@ setup(
                   },
     author='namph',
     author_email='phamnam.mta@gmail.com',
-    classifiers=[
-        'Programming Language :: Python :: 3.x',
-    ],
     install_requires=reqs,
     keywords='sani_nlu',
     python_requires='>=3.7',
