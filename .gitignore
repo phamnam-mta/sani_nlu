@@ -5,7 +5,7 @@
 /.idea/
 
 # sani nlu
-data/models/
+/models/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
