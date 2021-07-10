@@ -50,8 +50,8 @@ class FlairExtractor(EntityExtractor):
     def process(self, message: Message, **kwargs: Any) -> None:
         """Process an incoming message."""
         text = message.data.get('text')
-        intent = message.data.get('intent')
-        if text and intent['name'] in ['request_nearby_shops', 'request_coffee_shops', 'request_different_location']:
+        #intent = message.data.get('intent')
+        if text:
             sentence = Sentence(text)
             self.learner.predict(sentence)
             result = sentence.to_dict(tag_type='ner')
