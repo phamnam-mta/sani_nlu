@@ -1,5 +1,6 @@
 import os
 import logging
+import copy
 import torch
 from typing import Any, Dict, List, Optional, Text, Tuple, Type, Callable
 from sani_nlu.utils import initializeFolder, download_model, is_duplicated, is_overlap
@@ -56,7 +57,7 @@ class FlairExtractor(EntityExtractor):
             self.learner.predict(sentence)
             result = sentence.to_dict(tag_type='ner')
             old_entities = message.data.get("entities", [])
-            new_entities: list = message.get("entities", [])
+            new_entities = copy.deepcopy(old_entities)
             for e in result.get("entities"):
                 if e.get("labels")[0].value == "LOCATION":
                     entity = {}
