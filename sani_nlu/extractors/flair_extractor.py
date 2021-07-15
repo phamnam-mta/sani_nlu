@@ -2,7 +2,7 @@ import os
 import logging
 import torch
 from typing import Any, Dict, List, Optional, Text, Tuple, Type, Callable
-from sani_nlu.utils import initializeFolder, download_model
+from sani_nlu.utils import initializeFolder, download_model, is_duplicated, is_overlap
 
 from rasa.nlu.components import Component
 from rasa.nlu.extractors.extractor import EntityExtractor
@@ -55,7 +55,8 @@ class FlairExtractor(EntityExtractor):
             sentence = Sentence(text)
             self.learner.predict(sentence)
             result = sentence.to_dict(tag_type='ner')
-            old_entities = message.data.get("entities")
+            old_entities = message.data.get("entities", [])
+            new_entities: list = message.get("entities", [])
             for e in result.get("entities"):
                 if e.get("labels")[0].value == "LOCATION":
                     entity = {}
@@ -65,8 +66,13 @@ class FlairExtractor(EntityExtractor):
                     entity["confidence"] = e.get("labels")[0].score
                     entity["entity"] = "location"
                     entity["extractor"] = "FlairExtractor"
-                    old_entities.append(entity)
-            message.set("entities", old_entities, add_to_output=True)
+
+                    for old_entity in old_entities:
+                        if is_duplicated(entity, old_entity) or is_overlap(entity, old_entity):
+                            new_entities.remove(old_entity)
+                    new_entities.append(entity)
+                    
+            message.set("entities", new_entities, add_to_output=True)
         
 
     def persist(self, file_name: Text, model_dir: Text) -> Optional[Dict[Text, Any]]:
@@ -95,3 +101,6 @@ class FlairExtractor(EntityExtractor):
                 return cls(meta, learner)
             except Exception as ex:
                 logger.error(f"Cannot load Flair Extractor model: {MODEL_PATH}: error: {ex}")
+
+
+
