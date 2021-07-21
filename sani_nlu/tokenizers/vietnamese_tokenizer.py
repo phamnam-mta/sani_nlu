@@ -9,6 +9,13 @@ import rasa.utils.io
 from rasa.shared.constants import DOCS_URL_COMPONENTS
 from rasa.nlu.tokenizers.tokenizer import Token, Tokenizer
 from rasa.shared.nlu.training_data.message import Message
+from rasa.nlu.constants import TOKENS_NAMES, MESSAGE_ATTRIBUTES
+from rasa.shared.nlu.constants import (
+    TEXT,
+    INTENT,
+    RESPONSE_IDENTIFIER_DELIMITER,
+    ACTION_NAME,
+)
 
 
 class VietnameseTokenizer(Tokenizer):
@@ -31,6 +38,7 @@ class VietnameseTokenizer(Tokenizer):
         super().__init__(component_config)
 
         self.emoji_pattern = rasa.utils.io.get_emoji_regex()
+        self.text_normalized = ""
 
         if "case_sensitive" in self.component_config:
             rasa.shared.utils.io.raise_warning(
@@ -54,7 +62,7 @@ class VietnameseTokenizer(Tokenizer):
         text = text.strip(u"\ufeff")
         text = text.strip(u"\u200b\u200b\u200b\u200b\u200b\u200b\u200b")
         text = nl('NFKC', text)
-        text = self.text_normalize(text)
+        self.text_normalized = self.text_normalize(text)
 
         # we need to use regex instead of re, because of
         # https://stackoverflow.com/questions/12746458/python-unicode-regular-expression-matching-failing-with-some-unicode-characters
@@ -71,7 +79,7 @@ class VietnameseTokenizer(Tokenizer):
             # and not url characters
             r"(?<=[^0-9\s])[^\w._~:/?#\[\]()@!$&*+,;=-]+(?=[^0-9\s])",
             " ",
-            text,
+            self.text_normalized,
         ).split()
 
         words = [self.remove_emoji(w) for w in words]
@@ -79,15 +87,27 @@ class VietnameseTokenizer(Tokenizer):
 
         # if we removed everything like smiles `:)`, use the whole text as 1 token
         if not words:
-            words = [text]
+            words = [self.text_normalized]
 
-        tokens = self._convert_words_to_tokens(words, text)
+        tokens = self._convert_words_to_tokens(words, self.text_normalized)
 
         return self._apply_token_pattern(tokens)
 
+    def process(self, message: Message, **kwargs: Any) -> None:
+        """Tokenize the incoming message."""
+        for attribute in MESSAGE_ATTRIBUTES:
+            if isinstance(message.get(attribute), str):
+                if attribute in [INTENT, ACTION_NAME, RESPONSE_IDENTIFIER_DELIMITER]:
+                    tokens = self._split_name(message, attribute)
+                else:
+                    tokens = self.tokenize(message, attribute)
+
+                message.set(TOKENS_NAMES[attribute], tokens)
+        message.set(TEXT, self.text_normalized)
+
     def text_normalize(self, text):
         """
-        Chuẩn hóa dấu tiếng Việt
+        Normalize Vietnamese accents
         """
 
         text = re.sub(r"òa", "oà", text)
