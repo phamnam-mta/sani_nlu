@@ -62,7 +62,7 @@ class VietnameseTokenizer(Tokenizer):
         text = text.strip(u"\ufeff")
         text = text.strip(u"\u200b\u200b\u200b\u200b\u200b\u200b\u200b")
         text = nl('NFKC', text)
-        self.text_normalized = self.text_normalize(text)
+        self.text_normalized = self.text_normalize(text.lower())
 
         # we need to use regex instead of re, because of
         # https://stackoverflow.com/questions/12746458/python-unicode-regular-expression-matching-failing-with-some-unicode-characters
@@ -103,7 +103,7 @@ class VietnameseTokenizer(Tokenizer):
                     tokens = self.tokenize(message, attribute)
 
                 message.set(TOKENS_NAMES[attribute], tokens)
-        message.set(TEXT, self.text_normalized)
+        message.set(TEXT, self.text_normalized, add_to_output=True)
 
     def text_normalize(self, text):
         """
