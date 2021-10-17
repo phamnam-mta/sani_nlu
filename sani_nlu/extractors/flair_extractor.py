@@ -68,10 +68,12 @@ class FlairExtractor(EntityExtractor):
                     entity["entity"] = "location"
                     entity["extractor"] = "FlairExtractor"
 
+                    ok = True
                     for old_entity in old_entities:
                         if is_duplicated(entity, old_entity) or is_overlap(entity, old_entity):
-                            new_entities.remove(old_entity)
-                    new_entities.append(entity)
+                            ok = False
+                    if ok:
+                        new_entities.append(entity)
                     
             message.set("entities", new_entities, add_to_output=True)
         
