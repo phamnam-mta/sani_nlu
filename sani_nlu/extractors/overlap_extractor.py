@@ -10,9 +10,7 @@ from rasa.nlu.extractors.extractor import EntityExtractor
 from rasa.nlu.config import RasaNLUModelConfig
 from rasa.shared.nlu.training_data.training_data import TrainingData
 from rasa.shared.nlu.training_data.message import Message
-
-if torch.cuda.is_available():
-    torch.cuda.empty_cache()
+from sani_nlu.constants import THRESHOLD
     
 logger = logging.getLogger(__name__)
 
@@ -65,7 +63,7 @@ class OverlapExtractor(EntityExtractor):
                     if is_duplicated(e1, e2) or is_overlap(e1, e2):
                         ok = False
                         break
-                if ok:
+                if ok and e1.get("confidence") >= THRESHOLD:
                     new_entities.append(e1)
 
             # diet_classifier priority 2
@@ -75,7 +73,7 @@ class OverlapExtractor(EntityExtractor):
                     if is_duplicated(e1, e2) or is_overlap(e1, e2):
                         ok = False
                         break
-                if ok:
+                if ok and e1.get("confidence") >= THRESHOLD:
                     new_entities.append(e1)
                     
             message.set("entities", new_entities, add_to_output=True)
@@ -86,17 +84,6 @@ class OverlapExtractor(EntityExtractor):
 
         pass
 
-    @classmethod
-    def load(
-        cls,
-        meta: Dict[Text, Any],
-        model_dir: Text,
-        model_metadata: Optional["Metadata"] = None,
-        cached_component: Optional["Component"] = None,
-        **kwargs: Any,
-    ) -> "Component":
-        """Load this component from file."""
-        pass
 
 
 
