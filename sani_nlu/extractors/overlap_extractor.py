@@ -10,25 +10,21 @@ from rasa.nlu.extractors.extractor import EntityExtractor
 from rasa.nlu.config import RasaNLUModelConfig
 from rasa.shared.nlu.training_data.training_data import TrainingData
 from rasa.shared.nlu.training_data.message import Message
-from flair.models import SequenceTagger
-from flair.data import Sentence
 
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
     
 logger = logging.getLogger(__name__)
 
-class FlairExtractor(EntityExtractor):
-    name = "FlairExtractor"
+class OverlapExtractor(EntityExtractor):
+    name = "OverlapExtractor"
 
     def __init__(
         self,
         component_config: Optional[Dict[Text, Any]] = None,
         learner = None,
     ) -> None:
-        super(FlairExtractor, self).__init__(component_config)
-        self.learner = learner
-        initializeFolder()
+        super(OverlapExtractor, self).__init__(component_config)
 
     def train(
         self,
@@ -53,23 +49,36 @@ class FlairExtractor(EntityExtractor):
         text = message.data.get('text')
         #intent = message.data.get('intent')
         if text:
-            sentence = Sentence(text)
-            self.learner.predict(sentence)
-            result = sentence.to_dict(tag_type='ner')
-            entities = []
-            for e in result.get("entities"):
-                if e.get("labels")[0].value == "LOCATION":
-                    entity = {}
-                    entity["value"] = e.get("text")
-                    entity["start"] = e.get("start_pos")
-                    entity["end"] = e.get("end_pos")
-                    entity["confidence"] = e.get("labels")[0].score
-                    entity["entity"] = "location"
-                    entity["extractor"] = "FlairExtractor"
+            old_entities = message.get("entities", [])
+            regex_extractor = [x for x in old_entities if x.get("extractor") == "RegexEntityExtractor"]
+            flair_extractor = [x for x in old_entities if x.get("extractor") == "FlairExtractor"]
+            diet_classifier = [x for x in old_entities if x.get("extractor") == "DIETClassifier"]
+            new_entities = []
 
-                    entities.append(entity)
+            # regex_extractor priority 1
+            new_entities += regex_extractor
+
+            # flair_extractor priority 2
+            for e1 in flair_extractor:
+                ok = True
+                for e2 in new_entities:
+                    if is_duplicated(e1, e2) or is_overlap(e1, e2):
+                        ok = False
+                        break
+                if ok:
+                    new_entities.append(e1)
+
+            # diet_classifier priority 2
+            for e1 in diet_classifier:
+                ok = True
+                for e2 in new_entities:
+                    if is_duplicated(e1, e2) or is_overlap(e1, e2):
+                        ok = False
+                        break
+                if ok:
+                    new_entities.append(e1)
                     
-            message.set("entities", message.get("entities", []) + entities, add_to_output=True)
+            message.set("entities", new_entities, add_to_output=True)
         
 
     def persist(self, file_name: Text, model_dir: Text) -> Optional[Dict[Text, Any]]:
@@ -87,17 +96,7 @@ class FlairExtractor(EntityExtractor):
         **kwargs: Any,
     ) -> "Component":
         """Load this component from file."""
-        MODEL_PATH = download_model()
-        if not os.path.isfile(MODEL_PATH):
-            logger.error(f"File not found. Cannot load Flair Extractor model: {MODEL_PATH}")
-            return cls(component_config=meta)
-        else:
-            try:
-                learner = SequenceTagger.load(MODEL_PATH)
-                logger.debug(f"Load Flair Extractor model successfully ")
-                return cls(meta, learner)
-            except Exception as ex:
-                logger.error(f"Cannot load Flair Extractor model: {MODEL_PATH}: error: {ex}")
+        pass
 
 
 

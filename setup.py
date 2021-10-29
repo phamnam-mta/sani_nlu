@@ -31,7 +31,7 @@ VERSION = os.getenv('PACKAGE_VERSION', 'v0.0.1')
 
 setup(
     name='sani_nlu',
-    version='v0.0.9',
+    version='v1.0.1',
     description='Sani-NLU is a library to implement NLU component for Sani chatbot.',
     long_description=long_description,
     url='https://github.com/phamnam-mta/sani_nlu.git',
