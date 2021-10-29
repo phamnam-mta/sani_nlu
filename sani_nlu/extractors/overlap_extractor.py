@@ -73,7 +73,7 @@ class OverlapExtractor(EntityExtractor):
                     if is_duplicated(e1, e2) or is_overlap(e1, e2):
                         ok = False
                         break
-                if ok and e1.get("confidence") >= THRESHOLD:
+                if ok and e1.get("confidence_entity") >= THRESHOLD:
                     new_entities.append(e1)
                     
             message.set("entities", new_entities, add_to_output=True)
